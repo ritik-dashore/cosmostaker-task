@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { useLogin, usePostData } from './useCustomHooks'
 import { ToastContainer, toast } from 'react-toastify';
 import Admin from './Admin'
@@ -91,7 +91,8 @@ function Login() {
                                         </div>
                                         <button type="submit" className="btn btn-primary">Submit</button>
                                     </form>
-                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create Member102</a>
+                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create Member</a>
+                                    <Link to='/admin'>Go to admin</Link>
                                 </div>
                             </div>
                         </div>

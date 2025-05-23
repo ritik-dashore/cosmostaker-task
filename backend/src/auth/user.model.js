@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const DB_URL = process.env.DB_URL
 const DATABASE = process.env.DATABASE
+const memberCollection = process.env.MEMBER_COLLECTION
 
 const registerModel = {}
 
@@ -29,21 +30,23 @@ const userSchema = new mongoose.Schema({
         required: true,
     },
 });
-const userModel = mongoose.model('userRegister', userSchema, 'user_list');
+const userModel = mongoose.model('userRegister', userSchema, memberCollection);
 
+registerModel.getAllUser = async () => {
+    const data = await userModel.find({},{ password: 0 });
+    return data
+}
 registerModel.getUser = async (email) => {
-    let data = await userModel.findOne({email});
+    const data = await userModel.findOne({email});
     return data
 }
 registerModel.creatUser = async (name, email, password, roll_id) => {
-    console.log(roll_id, "roll_id");
-    
     let existUser = await userModel.findOne({email});
     if (existUser) {
         const userExist = {Message:`${email} already registerd`}
         return userExist
     }
-    let data = await userModel.insertOne({name, email, password, roll_id});
+    let data = await userModel.insertOne({name, email, password, roll_id, is_deleted:0});
     return data
 }
 module.exports = registerModel

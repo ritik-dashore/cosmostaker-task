@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const DB_URL = process.env.DB_URL
 const DATABASE = process.env.DATABASE
-
+const projectCollection = process.env.PROJECT_COLLECTION
 const projectModel = {}
 
 mongoose.connect(`${DB_URL}/${DATABASE}`, {
@@ -16,37 +16,43 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    assineName: {
+    assignName: {
         type: String,
+        required: true,
+    },
+    is_deleted:{
+        type: Number,
         required: true,
     }
 });
-const projectsModel = mongoose.model('projects', userSchema, 'projects');
+const projectsModel = mongoose.model('projects', userSchema, projectCollection);
 
 const objId = (id)=>{
     return new mongoose.Types.ObjectId(id)
 }
 projectModel.getProject = async () => {
-    let data = await projectsModel.find();
+    let data = await projectsModel.find({is_deleted:{$eq:0}});
     return data
 }
-projectModel.projectCreate = async (project, assineName) => {
+projectModel.projectCreate = async (project, assignName) => {
     
-    let existUser = await projectsModel.findOne({project});
+    const existUser = await projectsModel.findOne({project});
     if (existUser) {
-        const userExist = {Message:`${project} already registerd`}
+        const userExist = {status:false, message:`${project} already registerd`}
         return userExist
     }
-    let data = await projectsModel.insertOne({project, assineName, is_deleted:0});
+    const data = await projectsModel.insertOne({project, assignName, is_deleted:0});
     return data
 }
-projectModel.updateProject = async (id, project, assineName) => {    
-    const data = await projectsModel.updateOne({_id: new mongoose.Types.ObjectId(id)},{ $set: { project, assineName } });
+projectModel.updateProject = async (id, project, assignName) => {    
+    const data = await projectsModel.updateOne({_id: new mongoose.Types.ObjectId(id)},{ $set: { project, assignName } });
     return data
 }
 
 projectModel.deleteProject = async (id) => {    
     const data = await projectsModel.updateOne({_id: new mongoose.Types.ObjectId(id)},{ $set: { is_deleted:1 } });
+    console.log("deleteProject", data);
+    
     return data
 }
 module.exports = projectModel

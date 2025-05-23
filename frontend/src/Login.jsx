@@ -1,53 +1,73 @@
 import { useState } from 'react'
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
+import { useLogin, usePostData } from './useCustomHooks'
+import { ToastContainer, toast } from 'react-toastify';
 import Admin from './Admin'
+
 function Login() {
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const [name, setName] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isRegister, setRegiser] = useState(true)
-    const url = 'http://localhost:3000/Cosmostaker/api/login'
+    const [formsubmit, setFormsubmit] = useState(false)
     const loginFormHandler = async (e) => {
         e.preventDefault()
-        if (true) {
-            <navigate to='/admin'>{<Admin />}</navigate>
+        setFormsubmit(true)
+        if (!name && !email && !password) {
+            notification("All fields are required.", 'warning')
+            return
         }
-
-        console.log("email", password, email);
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                // "Content-Type": "application/x-www-form-urlencoded",
-            },
-            // Automatically converted to "username=example&password=password"
-            // body: new URLSearchParams({ email, password }),
-            body: JSON.stringify({ email, password })
-        });
-        const data = await response.json();
-        if (data) {
+        const data = await useLogin('login', 'POST', { email, password });
+        console.log("data", data);
+        if (!data.status) {
+            notification(data.message, 'error')
+        }
+        if (data.status) {
             localStorage.setItem("token", data.token)
             localStorage.setItem("roll_id", data.roll_id)
-            navigate("/");
+            setFormsubmit(false)
+            if (data.roll_id == 2) {
+                notification(data.message, 'success')
+                navigate("/admin");       
+            }
+            if (data.roll_id == 1) {
+                notification(data.message, 'success')
+                navigate("/team");
+            }
         }
     }
 
     const registrationFormHandler = async (e) => {
-        e.preventDefault()
-        const response = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                // "Content-Type": "application/x-www-form-urlencoded",
-            },
-            // Automatically converted to "username=example&password=password"
-            // body: new URLSearchParams({ email, password }),
-            body: JSON.stringify({ name, email, password })
-        });
-        const data = await response.json();
-        console.log("data", data);
+        try {
+            e.preventDefault()
+            setFormsubmit(true)
+            if (!name && !email && !password) {
+                notification("All fields are required.", 'warning')
+                return
+            }
+            const data = await usePostData('registration', 'POST', { name, email, password })
+                console.log("data.status", data.status);
+            if (!data.status) {
+                console.log("data.status", data.status);
+                notification(data.message, 'error')
+            }
+            if (data.status) {
+                console.log("data.status", data.status);
+                notification(data.message, 'success')
+                setFormsubmit(false)
+            }
+            
+        } catch (err) {
+            console.log(err);
+            notification('Something went wrong.', 'error')
+        }
+        
+        // console.log("data", data);
+        
     }
+    const notification = (message, type) => toast[type](message);
+    
     return (
         <>
             {isRegister ?
@@ -56,20 +76,22 @@ function Login() {
                         <div className="row justify-content-center form-alignment">
                             <div className="col-md-6">
                                 <div className="forms">
-                                    <h2>User Login Form</h2>
+                                    <h2>Member Login Form</h2>
                                     <form onSubmit={loginFormHandler}>
-                                        <div className="form-group">
+                                        <div className="form-group mb-2">
                                             <label htmlFor="exampleInputEmail1">Email address</label>
-                                            <input type="email" onChange={(e) => setEmail(e.target.value)} className="form-control" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Enter email" />
-                                            <small id="emailHelp" className="form-text text-muted">We'll never share your email with anyone else.</small>
+                                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value.trim())} className="form-control" id="emailhelp" aria-describedby="emailHelp" placeholder="Enter email" />
+                                            {!email && formsubmit ? <small id="emailhelp" className="form-text text-danger">This field is reuired.</small> : ''}
+                                            {/* <small id="emailHelp" className="form-text text-muted">We'll never share your email with anyone else.</small> */}
                                         </div>
                                         <div className="form-group mb-2">
-                                            <label htmlFor="exampleInputPassword1">Password</label>
-                                            <input type="password" onChange={(e) => setPassword(e.target.value)} className="form-control" id="exampleInputPassword1" placeholder="Password" />
+                                            <label htmlFor="password">Password</label>
+                                            <input type="password" value={password} onChange={(e) => setPassword(e.target.value.trim())} className="form-control" id="password" placeholder="Password" />
+                                            {!password && formsubmit ? <small id="passwordhelp" className="form-text text-danger">This field is reuired.</small> : ''}
                                         </div>
                                         <button type="submit" className="btn btn-primary">Submit</button>
                                     </form>
-                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create user</a>
+                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create Member</a>
                                 </div>
                             </div>
                         </div>
@@ -81,21 +103,22 @@ function Login() {
                         <div className="row justify-content-center form-alignment">
                             <div className="col-md-6">
                                 <div className="forms">
-                                    <h2>User Registration  Form</h2>
+                                    <h2>Member Registration  Form</h2>
                                     <form onSubmit={registrationFormHandler}>
                                         <div className="form-group">
-                                            <label htmlFor="name">Email address</label>
-                                            <input type="text" onChange={(e) => setName(e.target.value)} className="form-control" id="name" aria-describedby="emailHelp" placeholder="Enter name" />
-                                            <small id="name" className="form-text text-muted">We'll never share your email with anyone else.</small>
+                                            <label htmlFor="name">Member Name</label>
+                                            <input type="text" onChange={(e) => setName(e.target.value.trim())} className="form-control" id="name" aria-describedby="namehelp" placeholder="Enter name" />
+                                            {!name && formsubmit ? <small id="namehelp" className="form-text text-danger">This field is reuired.</small> : ''}
                                         </div>
                                         <div className="form-group">
                                             <label htmlFor="email">Email address</label>
-                                            <input type="email" onChange={(e) => setEmail(e.target.value)} className="form-control" id="email" aria-describedby="emailHelp" placeholder="Enter email" />
-                                            <small id="email" className="form-text text-muted">We'll never share your email with anyone else.</small>
+                                            <input type="email" onChange={(e) => setEmail(e.target.value.trim())} className="form-control" id="email" aria-describedby="emailhelp" placeholder="Enter email" />
+                                            {!email && formsubmit ? <small id="emailhelp" className="form-text text-danger">This field is reuired.</small> : ''}
                                         </div>
                                         <div className="form-group mb-2">
                                             <label htmlFor="password">Password</label>
-                                            <input type="password" onChange={(e) => setPassword(e.target.value)} className="form-control" id="password" placeholder="Password" />
+                                            <input type="password" onChange={(e) => setPassword(e.target.value.trim())} className="form-control" id="password" aria-describedby="passwordhelp" placeholder="Enter Password" />
+                                            {!password && formsubmit ? <small id="passwordhelp" className="form-text text-danger">This field is reuired.</small> : ''}
                                         </div>
                                         <button type="submit" className="btn btn-primary">Submit</button>
                                     </form>
@@ -106,6 +129,8 @@ function Login() {
                     </div>
                 </section>
             }
+            <ToastContainer />
+
         </>
     )
 }

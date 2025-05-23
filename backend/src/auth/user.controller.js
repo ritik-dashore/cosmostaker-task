@@ -13,7 +13,7 @@ userController.createUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const roll_id = 1
         const data = await registerModel.creatUser(name, email, hashedPassword, roll_id)
-        res.send({ status: true, data })
+        res.send({ status: true, message: "User Successfully Registered.", data })
     } catch (error) {
         console.log("Error", error);
         res.send({ status: false, message: "Something went wrong" })
@@ -30,7 +30,7 @@ userController.loginUser = async (req, res) => {
         }
         const getUSer = await registerModel.getUser(email)
         if (!getUSer) {
-            res.send({ status: true, message: "User not exit, please register this user" })
+            res.send({ status: false, message: "User not exit, please register this user" })
         }
         const dataBasePassword = getUSer.password
         const isPasswordMatched = await bcrypt.compare(password, dataBasePassword)
@@ -39,7 +39,7 @@ userController.loginUser = async (req, res) => {
                 let token = jwt.sign({
                     username: email,
                     password: password
-                }, secretKey, { expiresIn: '1h' });
+                }, secretKey, { expiresIn: '1d' });
                 return token
             } catch (err) {
                 console.log(err);
@@ -48,19 +48,27 @@ userController.loginUser = async (req, res) => {
         if (isPasswordMatched) {
             const token = genrateToken(email, password)
             const roll_id = getUSer.roll_id
-            res.send({ status: true, message: 'User succesfully loged in.', token, roll_id })
+            res.send({ status: true, message: `${email} succesfully loged in.`, token, roll_id })
         } else {
-            res.send({ status: true, message: "email && password are not matched." })
+            res.send({ status: false, message: "email && password are not matched." })
         }
     } catch (err) {
         console.log("Error", err);
         res.send({ status: false, message: "Something went wrong" })
     }
 }
-
+userController.getAllUser = async (req, res) => {
+    try {
+        let data = await registerModel.getAllUser()
+        res.send({ status: true, data })
+    } catch (error) {
+        console.log("Error", error);
+        res.send({ status: false, message: "Something went wrong" })
+    }
+}
 userController.getUser = async (req, res) => {
     try {
-        let data = await registerModel.getUser()
+        let data = await registerModel.getAllUser()
         res.send({ status: true, data })
     } catch (error) {
         console.log("Error", error);

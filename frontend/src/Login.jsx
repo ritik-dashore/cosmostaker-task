@@ -91,7 +91,7 @@ function Login() {
                                         </div>
                                         <button type="submit" className="btn btn-primary">Submit</button>
                                     </form>
-                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create Member</a>
+                                    <a href="javascript:void(0);" onClick={() => setRegiser(!isRegister)}>Create Member102</a>
                                 </div>
                             </div>
                         </div>
